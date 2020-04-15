@@ -1,0 +1,32 @@
+---
+title: "PrepareRNASeqData"
+author: "Yaoyu Wang"
+date: "8/2/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+
+```
+
+This R markdown reads in data file and package into a R data object and save it.
+
+
+```{r load, echo=TRUE}
+count_data=read.table("DemoData/demo_raw_counts.tsv", 
+                      header=TRUE, row.names='Gene')
+
+save(count_data, file="RNASeqData.Rdata")
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

@@ -1,0 +1,598 @@
+\documentclass[]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\usepackage{fixltx2e} % provides \textsubscript
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+\else % if luatex or xelatex
+  \ifxetex
+    \usepackage{mathspec}
+  \else
+    \usepackage{fontspec}
+  \fi
+  \defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
+\fi
+% use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+% use microtype if available
+\IfFileExists{microtype.sty}{%
+\usepackage{microtype}
+\UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\hypersetup{unicode=true,
+            pdftitle={RNASeq DGE Demo},
+            pdfauthor={Yaoyu Wang},
+            pdfborder={0 0 0},
+            breaklinks=true}
+\urlstyle{same}  % don't use monospace font for urls
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+\IfFileExists{parskip.sty}{%
+\usepackage{parskip}
+}{% else
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+}
+\setlength{\emergencystretch}{3em}  % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{0}
+% Redefines (sub)paragraphs to behave more like sections
+\ifx\paragraph\undefined\else
+\let\oldparagraph\paragraph
+\renewcommand{\paragraph}[1]{\oldparagraph{#1}\mbox{}}
+\fi
+\ifx\subparagraph\undefined\else
+\let\oldsubparagraph\subparagraph
+\renewcommand{\subparagraph}[1]{\oldsubparagraph{#1}\mbox{}}
+\fi
+
+%%% Use protect on footnotes to avoid problems with footnotes in titles
+\let\rmarkdownfootnote\footnote%
+\def\footnote{\protect\rmarkdownfootnote}
+
+%%% Change title format to be more compact
+\usepackage{titling}
+
+% Create subtitle command for use in maketitle
+\newcommand{\subtitle}[1]{
+  \posttitle{
+    \begin{center}\large#1\end{center}
+    }
+}
+
+\setlength{\droptitle}{-2em}
+
+  \title{RNASeq DGE Demo}
+    \pretitle{\vspace{\droptitle}\centering\huge}
+  \posttitle{\par}
+    \author{Yaoyu Wang}
+    \preauthor{\centering\large\emph}
+  \postauthor{\par}
+      \predate{\centering\large\emph}
+  \postdate{\par}
+    \date{8/2/2019}
+
+
+\begin{document}
+\maketitle
+
+We first load `knitr' library to generate R markup
+
+\subsection{R Markdown}\label{r-markdown}
+
+This is an R Markdown document. Markdown is a simple formatting syntax
+for authoring HTML, PDF, and MS Word documents. For more details on
+using R Markdown see \url{http://rmarkdown.rstudio.com}.
+
+When you click the \textbf{Knit} button a document will be generated
+that includes both content as well as the output of any embedded R code
+chunks within the document.
+
+Note that the \texttt{echo\ =\ FALSE} parameter was added to the code
+chunk to prevent printing of the R code that generated the plot.
+
+\section{Begin RNA-Seq Analysis}\label{begin-rna-seq-analysis}
+
+We first load the RNA-Seq count matrix from `RNASeqData.Rdata'. This is
+a simple 3 vs 3 RNA-Seq experiment with Control vs Experiment in count
+matrix by gene.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{load}\NormalTok{(}\StringTok{'RNASeqData.Rdata'}\NormalTok{)   }\CommentTok{# Load data set which contains a variable called 'count_data'}
+\KeywordTok{head}\NormalTok{(count_data)           }\CommentTok{# The head(count_data) provides the first 6 row of the 'count_data'}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##            YEW1_Control YEW2_Control YEW3_Control YEW4_Treated
+## LAPTM4B               0            0            0            0
+## ECHS1                47           22           37           56
+## ADH5P2                0            0            0            0
+## MMGT1                 0            0            0            0
+## AL031601.4            0            0            0            0
+## KRT18P27              0            0            0            0
+##            YEW5_Treated YEW6_Treated
+## LAPTM4B               0            0
+## ECHS1                31           24
+## ADH5P2                0            0
+## MMGT1                 0            0
+## AL031601.4            0            0
+## KRT18P27              3            0
+\end{verbatim}
+
+\subsection{Principle component
+analysis}\label{principle-component-analysis}
+
+Once the matrix is loaded, we can perform principle component analysis
+to visualize sample distribution.
+
+We first group samples into two vectors/variables: CONTROL and TREATED
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{CONTROL=}\KeywordTok{c}\NormalTok{(}\StringTok{"YEW1_Control"}\NormalTok{, }\StringTok{"YEW2_Control"}\NormalTok{, }\StringTok{"YEW3_Control"}\NormalTok{)}
+\NormalTok{TREATED=}\KeywordTok{c}\NormalTok{(}\StringTok{"YEW4_Treated"}\NormalTok{, }\StringTok{"YEW5_Treated"}\NormalTok{, }\StringTok{"YEW6_Treated"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+Calculate PCA use `prcomp' command. Since prcomp compute PCA by the
+rows, we will need to tranpose the count matrix such that the samples
+are represented by rows and genes by the columns.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{pca=}\KeywordTok{prcomp}\NormalTok{(}\KeywordTok{t}\NormalTok{(count_data))        }\CommentTok{# compute PCA on transposed count_data}
+\end{Highlighting}
+\end{Shaded}
+
+Plot first two dimension of pca results, e.g.~pc1 vs pc2 and color
+CONTROL samples in red and treated samples in blue.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{plot}\NormalTok{(pca}\OperatorTok{$}\NormalTok{x[,}\DecValTok{1}\NormalTok{], pca}\OperatorTok{$}\NormalTok{x[,}\DecValTok{2}\NormalTok{], }\DataTypeTok{xlab=}\StringTok{'pc1'}\NormalTok{, }\DataTypeTok{ylab=}\StringTok{'pc2'}\NormalTok{)}
+\KeywordTok{points}\NormalTok{(pca}\OperatorTok{$}\NormalTok{x[CONTROL,}\DecValTok{1}\NormalTok{], pca}\OperatorTok{$}\NormalTok{x[CONTROL,}\DecValTok{2}\NormalTok{],}
+       \DataTypeTok{col=}\StringTok{"red"}\NormalTok{, }\DataTypeTok{pch=}\DecValTok{18}\NormalTok{)}
+\KeywordTok{points}\NormalTok{(pca}\OperatorTok{$}\NormalTok{x[TREATED,}\DecValTok{1}\NormalTok{], pca}\OperatorTok{$}\NormalTok{x[TREATED,}\DecValTok{2}\NormalTok{],}
+       \DataTypeTok{col=}\StringTok{"blue"}\NormalTok{, }\DataTypeTok{pch=}\DecValTok{18}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{RNASeq_DGE_files/figure-latex/plot-1.pdf}
+
+\subsection{Hierarchical Clustering}\label{hierarchical-clustering}
+
+We first calculate similarity matrix using Euclidean distance. The
+matrix is computed by `dist' function. `hclust' function computes
+hierarhical cluster tree and save it into an variable object `hctree'
+that can be ploted by using generic `plot' function.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{# compute similarity matrix on the transposed count_data matrix using Euclidean distance}
+\NormalTok{dist_matrix=}\KeywordTok{dist}\NormalTok{(}\KeywordTok{t}\NormalTok{(count_data), }\DataTypeTok{method=}\StringTok{"euclidean"}\NormalTok{)}
+\CommentTok{# compute hierarchical clustering tree and save it into variable called 'hctree'}
+\NormalTok{hctree=}\KeywordTok{hclust}\NormalTok{(dist_matrix)}
+\CommentTok{# plot hctree}
+\KeywordTok{plot}\NormalTok{(hctree)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{RNASeq_DGE_files/figure-latex/unnamed-chunk-2-1.pdf}
+
+\subsection{Differential Gene
+Expression}\label{differential-gene-expression}
+
+We will use DESeq2 to perform differential gene expression. Since DESeq2
+is a specialized bioconductor package/library, we will need to install
+it before loading in the package to use.
+
+The following command check if DESeq2 and Bioconductor Manager packages
+have been installed, and install the packages if they have not been
+installed.
+
+Once the packages are installed, we can call `library' function to load
+`DESeq2' library to use its functions.
+
+\begin{verbatim}
+## Warning: package 'DESeq2' was built under R version 3.5.2
+\end{verbatim}
+
+\begin{verbatim}
+## Loading required package: S4Vectors
+\end{verbatim}
+
+\begin{verbatim}
+## Loading required package: stats4
+\end{verbatim}
+
+\begin{verbatim}
+## Loading required package: BiocGenerics
+\end{verbatim}
+
+\begin{verbatim}
+## Loading required package: parallel
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## Attaching package: 'BiocGenerics'
+\end{verbatim}
+
+\begin{verbatim}
+## The following objects are masked from 'package:parallel':
+## 
+##     clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
+##     clusterExport, clusterMap, parApply, parCapply, parLapply,
+##     parLapplyLB, parRapply, parSapply, parSapplyLB
+\end{verbatim}
+
+\begin{verbatim}
+## The following objects are masked from 'package:stats':
+## 
+##     IQR, mad, sd, var, xtabs
+\end{verbatim}
+
+\begin{verbatim}
+## The following objects are masked from 'package:base':
+## 
+##     anyDuplicated, append, as.data.frame, basename, cbind,
+##     colMeans, colnames, colSums, dirname, do.call, duplicated,
+##     eval, evalq, Filter, Find, get, grep, grepl, intersect,
+##     is.unsorted, lapply, lengths, Map, mapply, match, mget, order,
+##     paste, pmax, pmax.int, pmin, pmin.int, Position, rank, rbind,
+##     Reduce, rowMeans, rownames, rowSums, sapply, setdiff, sort,
+##     table, tapply, union, unique, unsplit, which, which.max,
+##     which.min
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## Attaching package: 'S4Vectors'
+\end{verbatim}
+
+\begin{verbatim}
+## The following object is masked from 'package:base':
+## 
+##     expand.grid
+\end{verbatim}
+
+\begin{verbatim}
+## Loading required package: IRanges
+\end{verbatim}
+
+\begin{verbatim}
+## Loading required package: GenomicRanges
+\end{verbatim}
+
+\begin{verbatim}
+## Loading required package: GenomeInfoDb
+\end{verbatim}
+
+\begin{verbatim}
+## Loading required package: SummarizedExperiment
+\end{verbatim}
+
+\begin{verbatim}
+## Loading required package: Biobase
+\end{verbatim}
+
+\begin{verbatim}
+## Welcome to Bioconductor
+## 
+##     Vignettes contain introductory material; view with
+##     'browseVignettes()'. To cite Bioconductor, see
+##     'citation("Biobase")', and for packages 'citation("pkgname")'.
+\end{verbatim}
+
+\begin{verbatim}
+## Loading required package: DelayedArray
+\end{verbatim}
+
+\begin{verbatim}
+## Loading required package: matrixStats
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## Attaching package: 'matrixStats'
+\end{verbatim}
+
+\begin{verbatim}
+## The following objects are masked from 'package:Biobase':
+## 
+##     anyMissing, rowMedians
+\end{verbatim}
+
+\begin{verbatim}
+## Loading required package: BiocParallel
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## Attaching package: 'DelayedArray'
+\end{verbatim}
+
+\begin{verbatim}
+## The following objects are masked from 'package:matrixStats':
+## 
+##     colMaxs, colMins, colRanges, rowMaxs, rowMins, rowRanges
+\end{verbatim}
+
+\begin{verbatim}
+## The following objects are masked from 'package:base':
+## 
+##     aperm, apply
+\end{verbatim}
+
+We can then use the functions within DESeq2 to perform DGE analysis
+
+First, we define which sampels are control group and which samples are
+treated group The samples are ordered as YEW1\_Control, YEW2\_Control,
+YEW3\_Control, YEW1\_Treated, YEW2\_Treated, YEW3\_Treated, so we can
+use the following to define conditions of each sample
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{condition <-}\StringTok{ }\KeywordTok{factor}\NormalTok{(}\KeywordTok{c}\NormalTok{(}\StringTok{"control"}\NormalTok{, }\StringTok{"control"}\NormalTok{, }\StringTok{"control"}\NormalTok{,}
+                      \StringTok{"treated"}\NormalTok{, }\StringTok{"treated"}\NormalTok{, }\StringTok{"treated"}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+We then use the `condition' to perform contrast on the count\_data.
+Noted that count\_data is still raw count matrix, DESeq2 performs
+normalization and DGE together in one function.
+
+If you want to know how to use a specific function in R, just type
+`?function' in Console. For example type:
+
+\begin{quote}
+?DESeqDataSetFromMatrix
+\end{quote}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{# This function generates model and set up contrast using linear model}
+\NormalTok{dds <-}\StringTok{ }\KeywordTok{DESeqDataSetFromMatrix}\NormalTok{(}\DataTypeTok{countData =}\NormalTok{ count_data,}
+                              \DataTypeTok{colData =} \KeywordTok{DataFrame}\NormalTok{(condition),}
+                              \DataTypeTok{design =} \OperatorTok{~}\NormalTok{condition)}
+
+\CommentTok{# This function runs the model and save all model parameters and estimation into dds object}
+\NormalTok{dds <-}\StringTok{ }\KeywordTok{DESeq}\NormalTok{(dds)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## estimating size factors
+\end{verbatim}
+
+\begin{verbatim}
+## estimating dispersions
+\end{verbatim}
+
+\begin{verbatim}
+## gene-wise dispersion estimates
+\end{verbatim}
+
+\begin{verbatim}
+## mean-dispersion relationship
+\end{verbatim}
+
+\begin{verbatim}
+## final dispersion estimates
+\end{verbatim}
+
+\begin{verbatim}
+## fitting model and testing
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{# Returns DGE gene list results in data frame format}
+\NormalTok{dge_results=}\KeywordTok{results}\NormalTok{(dds, }\DataTypeTok{contrast=}\KeywordTok{c}\NormalTok{(}\StringTok{"condition"}\NormalTok{, }\StringTok{"treated"}\NormalTok{, }\StringTok{"control"}\NormalTok{))}
+
+\CommentTok{# make sure there is no missing values}
+\NormalTok{dge_results=}\KeywordTok{na.omit}\NormalTok{(dge_results)  }
+
+\CommentTok{# filter for results with padj<0.001 and absolute log2FoldChange>2}
+\NormalTok{filtered_results=}\KeywordTok{subset}\NormalTok{(dge_results, padj}\OperatorTok{<}\FloatTok{0.001} \OperatorTok{&}\StringTok{ }\KeywordTok{abs}\NormalTok{(log2FoldChange)}\OperatorTok{>}\DecValTok{2}\NormalTok{)}
+
+\CommentTok{# Obtain normalized count values}
+\NormalTok{norm_count <-}\StringTok{ }\KeywordTok{counts}\NormalTok{(dds, }\DataTypeTok{normalized =}\NormalTok{ T)}
+
+\CommentTok{# output filtered_results}
+\NormalTok{filtered_results}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## log2 fold change (MLE): condition treated vs control 
+## Wald test p-value: condition treated vs control 
+## DataFrame with 30 rows and 6 columns
+##                       baseMean    log2FoldChange             lfcSE
+##                      <numeric>         <numeric>         <numeric>
+## RP1-137D17.1  29.8839883584897  2.18080051514365 0.525441950834757
+## AP000344.4      73.14903147842  2.12391047870749 0.333193245882354
+## CTB-134H23.2  16.4631893142531 -4.06989298788851 0.902046395861882
+## C12orf40      23.5935805512499 -2.69347617414478 0.622311943521575
+## RP11-395P13.1 25.2555673433736  2.25522540567288  0.55251100155043
+## ...                        ...               ...               ...
+## RP11-413E6.7  62.9678012294187 -3.57669120749119 0.409461162253874
+## CTD-2144E22.8 79.2703453044705 -2.48457438278124 0.339133969829025
+## RP11-747D18.1  1062.4407047496  2.01064482797773  0.12042205283902
+## RP11-864I4.4  25.0810724471142  2.31146493910142  0.55115609828326
+## MSMP          44.7309465700437  2.16345289754786 0.400073627551603
+##                            stat               pvalue                 padj
+##                       <numeric>            <numeric>            <numeric>
+## RP1-137D17.1   4.15041188028299 3.31877521851314e-05  0.00026025079086948
+## AP000344.4      6.3744103608193 1.83668201976646e-10 3.60334193573427e-09
+## CTB-134H23.2  -4.51184440906705 6.42663252483387e-06   5.821921826631e-05
+## C12orf40      -4.32817689293055 1.50348695874195e-05  0.00012712159813363
+## RP11-395P13.1  4.08177466031332 4.46931192753386e-05 0.000338444791804363
+## ...                         ...                  ...                  ...
+## RP11-413E6.7  -8.73511711783197 2.43403807314299e-18 1.20260893386853e-16
+## CTD-2144E22.8 -7.32623270984574 2.36712611316642e-13 6.83284951698415e-12
+## RP11-747D18.1  16.6966496632104 1.38633818987756e-62  7.2031449110832e-60
+## RP11-864I4.4   4.19384807008606 2.74261710788168e-05 0.000220325854147882
+## MSMP            5.4076368662136 6.38617383047045e-08 8.34139160148505e-07
+\end{verbatim}
+
+\subsection{Heatmap}\label{heatmap}
+
+Generate heatmap using filtered dge results `filtered\_results'. The
+heatmap function is core function such that no special package is
+needed.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{library}\NormalTok{(gplots)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Warning: package 'gplots' was built under R version 3.5.2
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## Attaching package: 'gplots'
+\end{verbatim}
+
+\begin{verbatim}
+## The following object is masked from 'package:IRanges':
+## 
+##     space
+\end{verbatim}
+
+\begin{verbatim}
+## The following object is masked from 'package:S4Vectors':
+## 
+##     space
+\end{verbatim}
+
+\begin{verbatim}
+## The following object is masked from 'package:stats':
+## 
+##     lowess
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{DGE_matrix=norm_count[}\KeywordTok{rownames}\NormalTok{(filtered_results),]}
+\KeywordTok{heatmap}\NormalTok{(DGE_matrix,}\DataTypeTok{col=}\KeywordTok{colorpanel}\NormalTok{(}\DecValTok{50}\NormalTok{, }\StringTok{'blue'}\NormalTok{, }\StringTok{'white'}\NormalTok{, }\StringTok{'red'}\NormalTok{),}
+        \DataTypeTok{Rowv=}\OtherTok{TRUE}\NormalTok{, }\DataTypeTok{Colv=}\OtherTok{TRUE}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{RNASeq_DGE_files/figure-latex/heatmap-1.pdf}
+
+\section{Generate Volcano Plot}\label{generate-volcano-plot}
+
+Again, we first check for the package `EnhancedVolcano', and install it
+if it is not already installed.
+
+Load the library and run EnhancedVolcano function to generate volcano
+plot.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{library}\NormalTok{(EnhancedVolcano)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Warning: package 'EnhancedVolcano' was built under R version 3.5.2
+\end{verbatim}
+
+\begin{verbatim}
+## Loading required package: ggplot2
+\end{verbatim}
+
+\begin{verbatim}
+## Loading required package: ggrepel
+\end{verbatim}
+
+\begin{verbatim}
+## Warning: package 'ggrepel' was built under R version 3.5.2
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{a=}\KeywordTok{EnhancedVolcano}\NormalTok{(dge_results,}
+    \DataTypeTok{lab =} \KeywordTok{rownames}\NormalTok{(dge_results),}
+    \DataTypeTok{x =} \StringTok{'log2FoldChange'}\NormalTok{,}
+    \DataTypeTok{y =} \StringTok{'padj'}\NormalTok{,}
+    \DataTypeTok{xlim =} \KeywordTok{c}\NormalTok{(}\OperatorTok{-}\DecValTok{5}\NormalTok{, }\DecValTok{8}\NormalTok{),}
+    \DataTypeTok{ylim =} \KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{20}\NormalTok{),}
+    \CommentTok{#pCutoff = 10e-16,}
+    \DataTypeTok{FCcutoff =} \FloatTok{1.5}
+\NormalTok{)}
+\NormalTok{a}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Warning: Removed 235 rows containing missing values (geom_point).
+\end{verbatim}
+
+\begin{verbatim}
+## Warning: Removed 11 rows containing missing values (geom_text).
+\end{verbatim}
+
+\includegraphics{RNASeq_DGE_files/figure-latex/volcano-1.pdf}
+
+
+\end{document}
