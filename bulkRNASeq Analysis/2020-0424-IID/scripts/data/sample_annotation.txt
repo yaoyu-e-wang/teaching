@@ -1,0 +1,7 @@
+sample  group
+"YEW1_Control"  "control"
+"YEW2_Control"  "control"
+"YEW3_Control"  "control"
+"YEW4_Treated"  "treated"
+"YEW5_Treated"  "treated"
+"YEW6_Treated"  "treated"

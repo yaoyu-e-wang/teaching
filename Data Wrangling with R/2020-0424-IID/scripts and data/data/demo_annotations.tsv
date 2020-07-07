@@ -1,0 +1,5 @@
+chrom	start	end	strand	name
+chr1	100	150	+	KRAS
+chr7	200	275	-	TP53
+chr8	300	350	-	CDK9
+chr7	500	600	+	CD44

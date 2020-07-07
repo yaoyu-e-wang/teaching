@@ -1,0 +1,112 @@
+---
+title: "Data Wrangling with R Basics - 3"
+date: 2020-04-24
+draft: false
+tags: ["R", "Data Wrangling", "tutorial"]
+categories: ["Tutorial"]
+author: "Yaoyu E. Wang"
+
+autoCollapseToc: true
+
+output: md_document
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r load_data}
+data=list(
+    dge_results=read.table('scripts and data/data/differential_results.csv', sep=',', header=T),
+    expr=read.table('scripts and data/data/gene_expression.tsv', header=T, row.names=1),  # first column being the rowname
+    annot=read.delim('scripts and data/data/gene_annotations.tsv')
+)
+```
+
+
+# find genes with greater than 0 mean expression between a given chr coordinate
+## Let's find out mean first
+You can use **rowMeans**, **rowMax**, **rowMin** to determine means for a data matrix
+```{r chr_mean}
+expr_mean=rowMeans(data$expr)
+gene_expr=cbind(data$expr, mean=expr_mean)
+```
+
+We can use the function **subset** to find the given with a given coordinate
+```{r}
+
+
+# select all genes on chromosome 20
+head(subset(data$annot, chrom=='chr20'))
+
+# select all genes on chromosome 20 and on positive strand
+head(subset(data$annot, chrom == 'chr20' & strand=="+"))
+
+# select all genes on chromosome 20 and on positive strand and between 10mb to 20mb
+head(subset(data$annot, chrom == 'chr20' & strand=="+" & start>10000000 & end<20000000))
+
+# select all genes on chromosome 20 and on positive strand and between 10mb to 20mb
+head(subset(data$annot, chrom == 'chr20' & strand=="+" & start>10000000 & end<20000000, select=c("chrom", "name")))
+
+# store into a variable
+chr20_subset=subset(data$annot, chrom == 'chr20' & strand=="+" & start>10000000 & end<20000000, select=c("chrom", "name"))
+
+# merge with gene expression data with means
+chr20_expr=merge(chr20_subset, gene_expr, by.x="name", by.y=0)  #by.y=0 means using row names
+
+head(chr20_expr)
+```
+
+We can put these steps into **function** to make it more reusable:
+**function** takes the form of:
+function( arglist ) expr
+return(value)
+
+Let start with a simple function
+```{r}
+add<-function(a,b){
+  x=a+b
+  return(x)
+}
+
+add(1,2)
+add(3,4)
+add(5,7)
+
+```
+
+Let's put everything together
+
+```{r find_mean}
+curr_coord=list(
+  chr="chr20",
+  strand="+",
+  start=10000000,
+  end=20000000
+)
+
+find_mean<-function(data, gene_expr, curr_coord){
+  selected_genes=subset(data$annot, chrom==curr_coord$chr & 
+                        strand==curr_coord$strand & 
+                          start>curr_coord$start & 
+                          end< curr_coord$end,
+                         select=c("chrom", "name"))
+  gene_mean_results=merge(selected_genes, gene_expr, by.x="name", by.y=0)
+  return(gene_mean_results)
+}
+
+merge_results=find_mean(data, gene_expr, curr_coord)
+head(merge_results==chr20_expr)
+
+```
+
+Lastly,  we filter out genes with means of 0
+
+```{r filter, warning=FALSE}
+final_results=subset(merge_results, mean>0, select=c("name", "chrom", "mean"))
+head(final_results)
+
+library(writexl)
+write_xlsx(final_results, "Outputs/final_results.xlsx")
+```

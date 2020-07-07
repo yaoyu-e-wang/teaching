@@ -1,0 +1,331 @@
+---
+title: "Data Wrangling with R Basics - 2"
+date: 2020-04-24
+draft: false
+tags: ["R", "Data Wrangling", "tutorial"]
+categories: ["English"]
+author: "Yaoyu E. Wang"
+
+autoCollapseToc: true
+output: md_document
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## Working with genomic data with R
+We provided 5 files in the **Data** directory:
+- differntial_results.csv
+- gene_expression.tsv
+- gene_annotations.tsv
+- my_pathway_genes.txt
+- mutations.tsv
+
+These files are stored in either comma-delimited (csv) or tab-delimited (tsv) formats.  Files can be read with the following functions available from default R libraries. These are built-in “functions” from R.  All read files, but with slightly different default behavior.
+
+| Function | package |Description
+|:---:|:---:|:---|
+|read.table(*file*)|util|Reads a file in table format and creates a data frame 
+|read.delim(*file*)|util|Same as read.table with "\t" as default delimiter
+|read.csv(*file*)|util|Same as read.table with "," as default delimiter
+
+```{r}
+# setwd("~/modules/data_wrangling")
+# First, load all the data:
+print('Loading data...')
+dge_results <- read.table('scripts and data/data/differential_results.csv', sep=',', header=T)
+expressions = read.table('scripts and data/data/gene_expression.tsv', header=T)
+annotations = read.delim('scripts and data/data/gene_annotations.tsv')
+pathways = read.table('scripts and data/data/my_pathway_genes.txt', sep='\t', col.names=c('gene_name','pathway'))
+mutations = read.delim('scripts and data/data/mutations.tsv')
+print('Done loading data.')
+```
+Reading files with read.table (or equivalents) automatically creates a dataframe. R’s version of a Excel spreadsheet- contains different data (of different types!) in the columns and “observations” in the rows.
+
+
+## Data Inspection
+Data can be inspected after loaded with these common commands:  
+**class()**: data type (e.g. character, numeric, etc.) of vectors and data structure of dataframes, matrices, and lists.
+**summary()**: detailed display, including descriptive statistics, frequencies
+**head()**: will display the top 5 entries for the variable
+**tail()**: will display the bottom 5 entries for the variable
+
+Specifically, for Dataframe and matrix data structure:
+**dim()**: returns dimensions of the dataset
+**nrow()**: returns the number of rows in the dataset
+**ncol()**: returns the number of columns in the dataset
+**rownames()**: returns the row names in the dataset
+**colnames()**: returns the column names in the dataset
+
+```{r inspection}
+print("Show the first six rows of each variable")
+head(dge_results)
+head(expressions)
+head(annotations)
+head(pathways)
+head(mutations)
+print("Done showing the first row of each data")
+```
+
+
+## Slicing data
+To refer to a cell in Excel, you’re used to A1 (first row, first column), C2 (third row, second
+column). Similar with a DataFrame:
+
+```{r slice, results="markup"}
+head(expressions)
+# These two lines return the same number
+expressions[2,2]
+expressions[2, 'SW1_Control']
+
+# Select First Column:
+head(expressions[1])
+head(expressions['gene'])  
+head(expressions[,1])
+head(expressions$gene)
+
+# select First Row:
+head(expressions[1,])
+
+# select first three columns
+head(expressions[1:3])
+
+# select all columns except first:
+head(expressions[2:ncol(expressions)])
+```
+
+## Using boolean
+
+1) Let's try a little example to select genes located on chromosome 7 and 3 from small gene
+annotation file ‘demo_annotations.tsv’.  This can be done in two ways:
+
+#### Excel
+```
+Open “demo_annotations.tsv” in excel
+Insert table
+Select ‘chrom’ column
+Set ‘chrom’ column equal ‘chr7’
+Set ‘chrom’ column equal ‘chr3’
+```
+#### R
+In R using boolean comparison to create logical vector
+```{r}
+df=read.table("scripts and data/data/demo_annotations.tsv", header=T)
+chroms=df$chrom
+is_chr7 = chroms == 'chr7'
+is_chr7
+df[is_chr7,]
+
+is_chr3 <- chroms == 'chr3'
+df[is_chr3,]
+```
+
+2) Select genes from gene annotations that are in your oncogene list (‘KRAS’, ‘TP53’)
+
+#### Excel
+```
+#select gene annotations for (‘KRAS’, ‘TP53’)
+Go to ‘name’ column
+Find ‘KRAS’
+Click on ‘KRAS’
+Find ‘TP53’
+Click on ‘TP53’
+```
+#### R
+```{r}
+# select gene that are annotated as oncogenes use %in%
+oncogenes = c('KRAS', 'TP53')  
+is_oncogene = df$name %in% oncogenes
+df[is_oncogene,]
+```
+3) Select genes from gene annotations that are in your oncogene list (‘KRAS’, ‘TP53’) and on chrom 7
+
+#### Excel
+```
+Go to ‘name’ column
+Find ‘KRAS’
+Click on ‘KRAS’
+Find ‘TP53’
+Click on ‘TP53’
+Set ‘chrom’ column equal ‘chr7’
+```
+
+#### R
+```{r}
+# Combine multiple criteria with AND (&) operation
+selection_criteria = is_oncogene & is_chr7
+data_subset = df[selection_criteria, ]
+data_subset
+```
+End of toy data set...
+
+## Real Size Data Set
+
+#### 1) Use the data set loaded earlier in the script to identify ras signaling genes that are significantly up-regulated from our result files:
+
+Steps to find these genes:
+
+- Get all the gene names that are in the pathway of interest (ras_signaling)
+from ‘my_pathway_genes.tsv’
+- Find differential gene expression(DGE) results for those RAS genes from
+‘differential_results.csv’
+- Find all the differentially expressed genes an adjusted p < 0.05 threshold
+from ‘differential_results.csv’
+- Find all the differentially expressed genes that are up-regulated with log fold
+change (log2FoldChange) > 0 from ‘differential_results.csv’
+- Keep only genes that pass all 3 "tests" (are True for all 3 conditions)
+- Just in case, remove missing data
+
+```{r}
+print('Filtering for ras signaling genes that are significantly upregulated.')
+# Get a vector of gene names that are in the pathway of interest
+ras_genes = pathways[pathways['pathway'] == 'ras_signaling', 'gene_name']
+
+#Create a boolean (True or False) vector for those RAS genes
+is_ras_gene = dge_results$gene %in% ras_genes
+
+# Create a boolean vector for whether the gene is significantly changed
+# at a p < 0.05 threshold
+is_significant = dge_results$padj < 0.05
+
+# Create a boolean vector for whether the gene is upregulated
+is_upregulated = dge_results$log2FoldChange > 0
+
+# Keep only rows that pass all 3 "tests" (are True for all 3)
+selected_rows = dge_results[is_ras_gene & is_significant & is_upregulated, ]
+
+# Just in case, remove missing data
+selected_rows = na.omit(selected_rows)
+
+# We now have the rows/genes-- now, keep only a subset of the columns:
+upregulated_ras_genes = selected_rows[c('gene','baseMean','log2FoldChange','padj')]
+print('Done filtering genes.')
+```
+#### 2) Find ras signaling genes that are significantly up-regulated
+with gene coordinates and gene expression values from our result files
+
+- Merge result with ‘gene_annotations.tsv’ on the selected genes
+- Merge result with ‘gene_expression.tsv’ on the selected genes
+
+```{r}
+# Merge with gene coordinates
+ras_up_genes_w_coords = merge(upregulated_ras_genes, annotations, by.x = 'gene', by.y='name')
+# Merge with gene expression
+ras_up_genes_w_coords_expression = merge(ras_up_genes_w_coords, expressions, by='gene')
+
+# examine the variable
+head(ras_up_genes_w_coords_expression)
+```
+
+## Integrating the SNP data with expression data
+**Problem**: The chromosome notations are different and can not be merged.
+chrom has chromosome as 'chr8' but the *mutations* has chrom as '8'.
+
+Strings can be concatenated by *paste()* or *poste0()*
+| Function | package |Description
+|---|---|---|
+|paste()|base|Concatenate vectors after converting to character with " " as separator
+|paste0()|base| paste with no separator, i.e. paste0('a','b') becomes 'ab' 
+
+```{r}
+# Select the first row from mutation and change chrom from '5' to 'chr5'
+i=1
+chrom =mutations[i,'chrom']
+chrom_w_prefix = paste('chr', chrom, sep='')  
+mutations[i,'chrom'] =chrom_w_prefix
+```
+We can change one instance. but then do we want to change each row one-by-one for 7479 times?
+There is a better way to do this…
+
+### Use flow control - the “for loop”
+```{r}
+print('Example using the for loop flow control')
+my_vector <- c(10,11,12,13) 
+for (item in my_vector){
+  print(item)
+  #do actual operations here
+}
+```
+
+Everything between { and } is repeated.  The script within the { } is called a "block " of code.
+The indentation within the block is not necessary, but helps with reading. The loop variable *item* is arbitrary.
+
+### Changing chromosome names in mutation dataframe
+```{r}
+# We need to add the 'chr' prefix to the chromosome names that are in the mutations dataframe.
+# This way, all the chromosome names are consistent.  
+# The method below is a slow way to do this, but easier to understand.
+for ( i in 2:nrow(mutations) )
+{
+	chrom = mutations[i,'chrom']
+	# Add ‘chr’ to each chrom value
+	chrom_w_prefix = paste('chr', chrom, sep='')
+	mutations[i, 'chrom'] = chrom_w_prefix
+}
+```
+
+Filter to keep only genes that are mutated. The idea is For each row (a gene), see if any of the mutations are “inside” that gene  e.g. Here, the first mutation is on the KRAS gene
+
+
+```{r}
+# Again, this a slow, but clear way to do this.
+ras_up_mutated_genes = data.frame()					        # define an empty result variable
+for ( i in 1:nrow(ras_up_genes_w_coords) )
+{
+  gene_info = ras_up_genes_w_coords[i,]       		  # get row i and save as gene_info
+  same_chrom = gene_info$chrom == mutations$chrom		# get mutation row with same chrom
+  past_start = mutations$pos >gene_info$start			  # get position > then gene_info start
+  before_end = mutations$pos <gene_info$end			    # get position < then gene_info start	
+  overlap = same_chrom & past_start & before_end		# get mutations fit all 3 conditions
+  if ( any(overlap) )							                  # if there is any mutation quality
+  {
+    ras_up_mutated_genes = rbind(ras_up_mutated_genes, gene_info) # use rbind() to add to result variable
+  }
+}
+```
+
+### Writing files
+Now, we want to save our clean results to a file. Look at the help from R’s built-in
+write.table function.
+
+| Function | package |Description
+|---|---|---|
+|write.table()|utils| write a variable into a file with provided filename with "\t" as delimitor
+|writexl()|writexl|Writes a data frame to an xlsx file
+
+```{r}
+print('Merge to add in the expression data')
+# note no by.x or by.y since the 'gene' column is in each dataframe
+final_data = merge(ras_up_mutated_genes, expressions)
+head(final_data)
+```
+
+We will create an 'Outputs' directory, if not exist, to store all of the output files.
+
+```{r}
+# get current working directory. 
+getwd()
+# Current directory is Data directory, change to output
+if(!dir.exists('Outputs')){
+  dir.create('Outputs')
+}
+# write final data out as a tab-seperated-value file (.tsv)
+print('Write the final data to file.')
+write.table(final_data, 'Outputs/final_data.tsv', sep='\t', quote=F)
+```
+
+write out file in Excel format using **writexl**.  Check if **writexl** package is available, if not install the package using function *install.packages()*.
+```{r excel, results='hide', warning=FALSE, message=FALSE}
+if(!require(readxl)) install.packages("readxl")
+if(!require(writexl)) install.packages("writexl")
+
+library(readxl)    # load  library to write excel file
+library(writexl)    # load  library to write excel file
+
+print('Write the final data to Excel file.')
+# start a new excel file and write final results 
+write_xlsx(final_data, "Outputs/final_results.xlsx", col_names=TRUE)
+# add a new sheet with new data onto the file we just created
+write_xlsx(ras_up_genes_w_coords, "Outputs/ras_up_genes_w_coords.xlsx", col_names=TRUE)
+```
